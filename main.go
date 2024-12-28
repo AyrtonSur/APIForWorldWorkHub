@@ -12,14 +12,29 @@ import (
 )
 
 type User struct {
-  ID             string `gorm:"type:uuid;primary_key"`
-	Firstname      string `json:"firstname"`
-	Lastname       string `json:"lastname"`
-	Email          string `json:"email"`
-	PasswordDigest string `json:"password_digest"`
+	ID             string     `gorm:"type:uuid;primary_key"`
+	Firstname      string     `json:"firstname"`
+	Lastname       string     `json:"lastname"`
+	Email          string     `json:"email"`
+	PasswordDigest string     `json:"password_digest"`
+	Role           string     `json:"role"` // Adicionado campo Role
+	Contact        string     `json:"contact"`
+	Region         *string    `json:"region"`
+	ServiceDesc    *string		`json:"description"`
+	Services       []Service  `gorm:"foreignkey:UserID"` // Relacionamento um-para-muitos
+}
+
+type Service struct {
+	ID     string `gorm:"type:uuid;primary_key"`
+	UserID string `gorm:"type:uuid"` // Campo para associar ao usuário
 }
 
 func (user *User) BeforeCreate(scope *gorm.Scope) error {
+	uuid := uuid.New().String()
+	return scope.SetColumn("ID", uuid)
+}
+
+func (service *Service) BeforeCreate(scope *gorm.Scope) error {
 	uuid := uuid.New().String()
 	return scope.SetColumn("ID", uuid)
 }
@@ -33,7 +48,7 @@ func initialMigration() {
 	defer db.Close()
 
 	// Migrate the schema
-	db.AutoMigrate(&User{})
+	db.AutoMigrate(&User{}, &Service{})
 }
 
 func getUsers(context *gin.Context) {
@@ -72,8 +87,8 @@ func addUser(context *gin.Context) {
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.PasswordDigest), bcrypt.DefaultCost)
 	if err != nil {
-			context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
-			return
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
+		return
 	}
 	newUser.PasswordDigest = string(hashedPassword)
 
