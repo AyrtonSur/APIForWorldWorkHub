@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -67,6 +68,14 @@ func addUser(context *gin.Context) {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
 		return
 	}
+
+	// Hash the password before saving the user
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.PasswordDigest), bcrypt.DefaultCost)
+	if err != nil {
+			context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
+			return
+	}
+	newUser.PasswordDigest = string(hashedPassword)
 
 	if err := db.Create(&newUser).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
