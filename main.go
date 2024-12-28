@@ -60,7 +60,7 @@ func getUsers(context *gin.Context) {
 	defer db.Close()
 
 	var users []User
-	if err := db.Find(&users).Error; err != nil {
+	if err := db.Preload("Services").Find(&users).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve users"})
 		return
 	}
@@ -108,7 +108,7 @@ func getUserById(id string) (*User, error) {
 	defer db.Close()
 
 	var user User
-	if err := db.Where("id = ?", id).First(&user).Error; err != nil {
+	if err := db.Preload("Services").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, errors.New("User not found")
 	}
 
@@ -127,11 +127,41 @@ func getUser(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, user)
 }
 
+func addService(context *gin.Context) {
+	var newService Service
+	if err := context.BindJSON(&newService); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
+		return
+	}
+
+	db, err := gorm.Open("sqlite3", "test.db")
+	if err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
+		return
+	}
+	defer db.Close()
+
+	// Verificar se o usuário existe
+	var user User
+	if err := db.Where("id = ?", newService.UserID).First(&user).Error; err != nil {
+		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	if err := db.Create(&newService).Error; err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create service"})
+		return
+	}
+
+	context.IndentedJSON(http.StatusCreated, newService)
+}
+
 func handleRequests() {
 	router := gin.Default()
 	router.GET("/users", getUsers)
 	router.POST("/users", addUser)
 	router.GET("/users/:id", getUser)
+	router.POST("/services", addService)
 	router.Run("localhost:9090")
 }
 
