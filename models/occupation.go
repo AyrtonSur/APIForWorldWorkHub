@@ -8,7 +8,7 @@ import (
 type Occupation struct {
 	ID     string `gorm:"type:uuid;primary_key"`
 	Name   string `json:"name"`
-	UserID string `gorm:"type:uuid"`
+	UserID string `json:"userId" gorm:"type:uuid" validate:"required"`
 }
 
 func (occupation *Occupation) BeforeCreate(scope *gorm.Scope) error {
