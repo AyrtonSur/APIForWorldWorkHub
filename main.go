@@ -1,217 +1,26 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
-	"time"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/go-playground/validator/v10"
+	"example/APIForWorldWorkHub/database"
+	"example/APIForWorldWorkHub/routes"
 )
 
 var validate *validator.Validate
-type User struct {
-	ID               string     `gorm:"type:uuid;primary_key"`
-	Firstname        string     `json:"firstname"`
-	Lastname         string     `json:"lastname"`
-	Email            string     `json:"email" gorm:"not null" validate:"required,email"`
-	PasswordDigest   string     `json:"password" gorm:"not null" validate:"required,password"`
-	CPF              *string    `json:"CPF"`
-	Role             string     `json:"role"` // Adicionado campo Role
-	Contact          string     `json:"contact"`
-	Occupation       Occupation `gorm:"foreignkey:UserID"`
-	Phone            string     `json:"phone"`
-	Education        string     `json:"education"`
-	Region           *string    `json:"region"`
-	ServiceDesc      *string		`json:"description"`
-	Services         []Service  `gorm:"foreignkey:UserID"` // Relacionamento um-para-muitos]
-	SpokenLanguages  []Language `gorm:"foreignkey:UserID"`
-}
 
-type Service struct {
-	ID          string    `gorm:"type:uuid;primary_key"`
-	UserID      string    `gorm:"type:uuid"` // Campo para associar ao usuário
-	Date        time.Time `json:"date"`
-	Pay         int64     `json:"pay"`
-	Description string    `json:"description"`
-}
-
-type Language struct {
-	ID     string `gorm:"type:uuid;primary_key"`
-	Name   string `json:"name"`
-	UserID string `gorm:"type:uuid"`
-}
-
-type Occupation struct {
-	ID     string `gorm:"type:uuid;primary_key"`
-	Name   string `json:"name"`
-	UserID string `gorm:"type:uuid"`
-}
-
-func (user *User) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
-}
-
-func (service *Service) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
-}
-
-func (service *Language) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
-}
-
-func (occupation *Occupation) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
-}
-
-func initialMigration() {
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		fmt.Println(err.Error())
-		panic("failed to connect database")
-	}
-	defer db.Close()
-
-	// Migrate the schema
-	db.AutoMigrate(&User{}, &Service{}, &Language{}, &Occupation{})
-}
-
-func getUsers(context *gin.Context) {
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
-		return
-	}
-	defer db.Close()
-
-	var users []User
-	if err := db.Preload("Services").Preload("SpokenLanguages").Find(&users).Error; err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve users"})
-		return
-	}
-
-	context.IndentedJSON(http.StatusOK, users)
-}
-
-func addUser(context *gin.Context) {
-	fmt.Println("New User Endpoint Hit")
-
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
-		return
-	}
-	defer db.Close()
-
-	var newUser User
-	if err := context.BindJSON(&newUser); err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
-		return
-	}
-
-	// Validate the user
-	if err := validate.Struct(newUser); err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
-		return
-	}
-
-	// Hash the password before saving the user
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.PasswordDigest), bcrypt.DefaultCost)
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
-		return
-	}
-	newUser.PasswordDigest = string(hashedPassword)
-
-	if err := db.Create(&newUser).Error; err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
-		return
-	}
-
-	context.IndentedJSON(http.StatusCreated, newUser)
-}
-
-func getUserById(id string) (*User, error) {
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	var user User
-	if err := db.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
-		return nil, errors.New("User not found")
-	}
-
-	return &user, nil
-}
-
-func getUser(context *gin.Context) {
-	id := context.Param("id")
-	user, err := getUserById(id)
-	
-	if err != nil {
-		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "User not found"})
-		return
-	}
-
-	context.IndentedJSON(http.StatusOK, user)
-}
-
-func addService(context *gin.Context) {
-	var newService Service
-	if err := context.BindJSON(&newService); err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
-		return
-	}
-
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
-		return
-	}
-	defer db.Close()
-
-	// Verificar se o usuário existe
-	var user User
-	if err := db.Where("id = ?", newService.UserID).First(&user).Error; err != nil {
-		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "User not found"})
-		return
-	}
-
-	if err := db.Create(&newService).Error; err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create service"})
-		return
-	}
-
-	context.IndentedJSON(http.StatusCreated, newService)
+func main() {
+	fmt.Println("Go ORM Tutorial")
+	validate = validator.New()
+	validate.RegisterValidation("password", passwordValidator) // Registrar a validação personalizada
+	database.InitialMigration()
+	router := gin.Default()
+	routes.SetupRoutes(router, validate)
+	router.Run("localhost:9090")
 }
 
 func passwordValidator(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
 	return len(password) >= 4
-}
-
-func handleRequests() {
-	router := gin.Default()
-	router.GET("/users", getUsers)
-	router.POST("/users", addUser)
-	router.GET("/users/:id", getUser)
-	router.POST("/services", addService)
-	router.Run("localhost:9090")
-}
-
-func main() {
-	validate = validator.New()
-  validate.RegisterValidation("password", passwordValidator) // Registrar a validação personalizada
-	initialMigration()
-	handleRequests()
 }
