@@ -197,12 +197,7 @@ func addService(context *gin.Context) {
 
 func passwordValidator(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
-	// Exemplo de validação: pelo menos 4 caracteres
-	if len(password) < 4 {
-		return false
-	}
-	// Adicione outras regras de validação conforme necessário
-	return true
+	return len(password) >= 4
 }
 
 func handleRequests() {
