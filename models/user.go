@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -23,7 +23,7 @@ type User struct {
 	SpokenLanguages  []Language `gorm:"foreignkey:UserID"`
 }
 
-func (user *User) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
+func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
+	user.ID = uuid.New().String()
+	return
 }
