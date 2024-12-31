@@ -6,20 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/models"
+	"example/APIForWorldWorkHub/utils"
 )
 
 func GetUsers(context *gin.Context) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
-		return
-	}
-
 	var users []models.User
-	if err := db.Preload("Services").Preload("SpokenLanguages").Find(&users).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Find(&users).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve users"})
 		return
 	}
@@ -27,13 +21,7 @@ func GetUsers(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, users)
 }
 
-func AddUser(context *gin.Context, validate *validator.Validate) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if err != nil {
-		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
-		return
-	}
-
+func Register(context *gin.Context, validate *validator.Validate) {
 	var newUser models.User
 	if err := context.BindJSON(&newUser); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
@@ -54,7 +42,7 @@ func AddUser(context *gin.Context, validate *validator.Validate) {
 	}
 	newUser.PasswordDigest = string(hashedPassword)
 
-	if err := db.Create(&newUser).Error; err != nil {
+	if err := database.DB.Create(&newUser).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
@@ -63,13 +51,8 @@ func AddUser(context *gin.Context, validate *validator.Validate) {
 }
 
 func GetUserById(id string) (*models.User, error) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
 	var user models.User
-	if err := db.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, errors.New("User not found")
 	}
 
@@ -86,4 +69,34 @@ func GetUser(context *gin.Context) {
 	}
 
 	context.IndentedJSON(http.StatusOK, user)
+}
+
+func Login(context *gin.Context,) {
+	var input struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(input.Password)); err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+		return
+	}
+
+	token, err := utils.GenerateJWT(user.Email)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"token": token})
 }
