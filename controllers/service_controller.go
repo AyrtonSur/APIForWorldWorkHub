@@ -3,7 +3,8 @@ package controllers
 import (
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"example/APIForWorldWorkHub/models"
 	"github.com/go-playground/validator/v10"
 )
@@ -21,12 +22,11 @@ func AddService(context *gin.Context, validate *validator.Validate) {
 		return
 	}
 
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
 		return
 	}
-	defer db.Close()
 
 	// Verificar se o usuário existe
 	var user models.User
