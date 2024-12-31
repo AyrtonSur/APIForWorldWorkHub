@@ -5,18 +5,18 @@ import (
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"example/APIForWorldWorkHub/models"
 )
 
 func GetUsers(context *gin.Context) {
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
 		return
 	}
-	defer db.Close()
 
 	var users []models.User
 	if err := db.Preload("Services").Preload("SpokenLanguages").Find(&users).Error; err != nil {
@@ -28,12 +28,11 @@ func GetUsers(context *gin.Context) {
 }
 
 func AddUser(context *gin.Context, validate *validator.Validate) {
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect database"})
 		return
 	}
-	defer db.Close()
 
 	var newUser models.User
 	if err := context.BindJSON(&newUser); err != nil {
@@ -64,11 +63,10 @@ func AddUser(context *gin.Context, validate *validator.Validate) {
 }
 
 func GetUserById(id string) (*models.User, error) {
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	var user models.User
 	if err := db.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
