@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Occupation struct {
@@ -11,7 +11,7 @@ type Occupation struct {
 	UserID string `json:"userId" gorm:"type:uuid" validate:"required"`
 }
 
-func (occupation *Occupation) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
+func (occupation *Occupation) BeforeCreate(tx *gorm.DB) (err error) {
+	occupation.ID = uuid.New().String()
+	return
 }
