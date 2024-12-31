@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Service struct {
@@ -14,7 +14,7 @@ type Service struct {
 	Description string    `json:"description" validate:"required"`
 }
 
-func (service *Service) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
+func (service *Service) BeforeCreate(tx *gorm.DB) (err error) {
+	service.ID = uuid.New().String()
+	return
 }
