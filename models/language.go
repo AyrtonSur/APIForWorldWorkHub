@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Language struct {
@@ -11,7 +11,7 @@ type Language struct {
 	UserID string `json:"userId" gorm:"type:uuid" validate:"required"`
 }
 
-func (service *Language) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.New().String()
-	return scope.SetColumn("ID", uuid)
+func (language *Language) BeforeCreate(tx *gorm.DB) (err error) {
+	language.ID = uuid.New().String()
+	return
 }
