@@ -7,12 +7,15 @@ import (
 	"example/APIForWorldWorkHub/models"
 )
 
+var DB *gorm.DB
+
 func InitialMigration() {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	var err error
+	DB, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{})
+	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{})
 }

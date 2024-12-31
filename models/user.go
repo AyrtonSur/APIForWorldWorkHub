@@ -9,8 +9,8 @@ type User struct {
 	ID               string     `gorm:"type:uuid;primary_key"`
 	Firstname        string     `json:"firstname" validate:"required"`
 	Lastname         string     `json:"lastname" validate:"required"`
-	Email            string     `json:"email" gorm:"not null" validate:"required,email"`
-	PasswordDigest   string     `json:"password_digest" gorm:"not null" validate:"required,password"`
+	Email            string     `json:"email" gorm:"uniqueIndex" validate:"required,email"`
+	PasswordDigest   string     `json:"password_digest" validate:"required,password"`
 	CPF              *string    `json:"CPF"`
 	Role             string     `json:"role" validate:"required"`
 	Contact          string     `json:"contact"`
