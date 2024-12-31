@@ -9,7 +9,7 @@ import (
 func SetupRoutes(router *gin.Engine, validate *validator.Validate) {
 	router.GET("/users", controllers.GetUsers)
 	router.POST("/users", func(c *gin.Context) {
-		controllers.AddUser(c, validate)
+		controllers.Register(c, validate)
 	})
 	router.GET("/users/:id", controllers.GetUser)
 	router.POST("/services", func(c *gin.Context) {
