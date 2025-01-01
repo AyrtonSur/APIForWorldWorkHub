@@ -14,11 +14,11 @@ type User struct {
 	CPF              *string    `json:"CPF"`
 	Role             string     `json:"role" validate:"required"`
 	Contact          string     `json:"contact"`
-	Occupation       *Occupation `json:"occupation"`
+	OccupationID     *string       
+	Occupation       *Occupation `json:"occupation" gorm:"foreignKey:OccupationID"`
 	Phone            string     `json:"phone"`
 	Education        string     `json:"education"`
 	Region           *string    `json:"region"`
-	ServiceDesc      *string    `json:"description"`
 	Services         []Service  `gorm:"foreignkey:UserID"`
 	SpokenLanguages  []Language `gorm:"foreignkey:UserID"`
 }
