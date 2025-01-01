@@ -7,8 +7,7 @@ import (
 
 type Occupation struct {
 	ID     string `gorm:"type:uuid;primary_key"`
-	Name   string `json:"name"`
-	UserID string `json:"userId" gorm:"type:uuid" validate:"required"`
+	Name   string `gorm:"unique"`
 }
 
 func (occupation *Occupation) BeforeCreate(tx *gorm.DB) (err error) {
