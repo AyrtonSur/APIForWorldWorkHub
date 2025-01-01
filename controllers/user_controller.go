@@ -53,7 +53,7 @@ func Register(context *gin.Context, validate *validator.Validate) {
 func GetUserById(id string) (*models.User, error) {
 	var user models.User
 	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
-		return nil, errors.New("User not found")
+		return nil, errors.New("user not found")
 	}
 
 	return &user, nil
@@ -71,30 +71,36 @@ func GetUser(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, user)
 }
 
-func Login(context *gin.Context,) {
+func Login(context *gin.Context, validate *validator.Validate) {
 	var input struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
 	}
+
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if err := validate.Struct(input); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
 		return
 	}
 
 	var user models.User
 	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid Credentials"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(input.Password)); err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid Credentials"})
 		return
 	}
 
 	token, err := utils.GenerateJWT(user.Email)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate token"})
 		return
 	}
 
