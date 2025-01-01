@@ -22,11 +22,26 @@ func GetUsers(context *gin.Context) {
 }
 
 func Register(context *gin.Context, validate *validator.Validate) {
-	var newUser models.User
+	var newUser struct {
+		Firstname      string  `json:"firstname" validate:"required"`
+		Lastname       string  `json:"lastname" validate:"required"`
+		Email          string  `json:"email" validate:"required,email"`
+		PasswordDigest string  `json:"password_digest" validate:"required,password"`
+		CPF            *string `json:"CPF"`
+		Role           string  `json:"role" validate:"required"`
+		Contact        string  `json:"contact"`
+		OccupationName string  `json:"occupation" validate:"required"`
+		Phone          string  `json:"phone"`
+		Education      string  `json:"education"`
+		Region         *string `json:"region"`
+		ServiceDesc    *string `json:"description"`
+	}
+
 	if err := context.BindJSON(&newUser); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
 		return
 	}
+
 
 	// Validate the user
 	if err := validate.Struct(newUser); err != nil {
@@ -34,6 +49,12 @@ func Register(context *gin.Context, validate *validator.Validate) {
 		return
 	}
 
+	var occupation models.Occupation
+	if err := database.DB.First(&occupation, "name = ?", newUser.OccupationName).Error; err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		return
+	}
+	
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.PasswordDigest), bcrypt.DefaultCost)
 	if err != nil {
