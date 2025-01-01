@@ -14,7 +14,7 @@ type User struct {
 	CPF              *string    `json:"CPF"`
 	Role             string     `json:"role" validate:"required"`
 	Contact          string     `json:"contact"`
-	Occupation       Occupation `json:"occupation"`
+	Occupation       *Occupation `json:"occupation"`
 	Phone            string     `json:"phone"`
 	Education        string     `json:"education"`
 	Region           *string    `json:"region"`
