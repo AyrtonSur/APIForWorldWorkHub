@@ -13,7 +13,6 @@ type User struct {
 	PasswordDigest   string     `json:"password_digest" validate:"required,password"`
 	CPF              *string    `json:"CPF"`
 	Role             string     `json:"role" validate:"required"`
-	Contact          string     `json:"contact"`
 	OccupationID     *string       
 	Occupation       *Occupation `json:"occupation" gorm:"foreignKey:OccupationID"`
 	Phone            string     `json:"phone"`
