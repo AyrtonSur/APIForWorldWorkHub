@@ -26,15 +26,13 @@ func Register(context *gin.Context, validate *validator.Validate) {
 		Firstname      string  `json:"firstname" validate:"required"`
 		Lastname       string  `json:"lastname" validate:"required"`
 		Email          string  `json:"email" validate:"required,email"`
-		PasswordDigest string  `json:"password_digest" validate:"required,password"`
+		Password       string  `json:"password" validate:"required,password"`
 		CPF            *string `json:"CPF"`
 		Role           string  `json:"role" validate:"required"`
-		Contact        string  `json:"contact"`
 		OccupationName string  `json:"occupation" validate:"required"`
 		Phone          string  `json:"phone"`
 		Education      string  `json:"education"`
 		Region         *string `json:"region"`
-		ServiceDesc    *string `json:"description"`
 	}
 
 	if err := context.BindJSON(&newUser); err != nil {
@@ -56,12 +54,12 @@ func Register(context *gin.Context, validate *validator.Validate) {
 	}
 	
 	// Hash the password before saving the user
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.PasswordDigest), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
 		return
 	}
-	newUser.PasswordDigest = string(hashedPassword)
+	newUser.Password = string(hashedPassword)
 
 	if err := database.DB.Create(&newUser).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
