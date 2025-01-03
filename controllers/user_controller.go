@@ -34,6 +34,7 @@ func Register(context *gin.Context, validate *validator.Validate) {
 		Education      string  `json:"education"`
 		Region         string  `json:"region"`
 		City           string  `json:"city"`
+		ZipCode        string  `json:"zipcode" validate:"required,zipcode"`
 	}
 
 	if err := context.BindJSON(&newUser); err != nil {
