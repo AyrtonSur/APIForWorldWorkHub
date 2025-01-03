@@ -29,10 +29,10 @@ func Register(context *gin.Context) {
 		CPF            *string `json:"CPF"`
 		Role           string  `json:"role" validate:"required"`
 		OccupationName string  `json:"occupation" validate:"required"`
-		Phone          string  `json:"phone"`
-		Education      string  `json:"education"`
-		Region         string  `json:"region"`
-		City           string  `json:"city"`
+		Phone          string  `json:"phone" validate:"required"`
+		Education      string  `json:"education" validate:"required"`
+		Region         string  `json:"region" validate:"required"`
+		City           string  `json:"city" validate:"required"`
 		ZipCode        string  `json:"zipcode" validate:"required,zipcode"`
 	}
 
@@ -41,8 +41,6 @@ func Register(context *gin.Context) {
 		return
 	}
 
-
-	// Validate the user
 	if err := utils.Validate.Struct(newUser); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
 		return
@@ -53,6 +51,12 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
+
+	var region models.Region
+	if err := database.DB.Where("name = ? OR abbreviation = ?", newUser.Region, newUser.Region).First(&region).Error; err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Region Not Found", "errors": err.Error()})
+		return
+	}
 	
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
@@ -60,20 +64,19 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
 		return
 	}
-	newUser.Password = string(hashedPassword)
 
-	// Cria o usuário com a Occupation associada
+	// Cria o usuário com a Occupation associada e Region associada
 	newUserModel := models.User{
 		Firstname:      newUser.Firstname,
 		Lastname:       newUser.Lastname,
 		Email:          newUser.Email,
-		PasswordDigest: newUser.Password,
+		PasswordDigest: string(hashedPassword),
 		CPF:            newUser.CPF,
 		Role:           newUser.Role,
 		OccupationID:   &occupation.ID,
 		Phone:          newUser.Phone,
 		Education:      newUser.Education,
-		Region:         newUser.Region,
+		RegionID:       region.ID,
 		City:           newUser.City,
 		ZipCode:        newUser.ZipCode,
 	}
