@@ -5,10 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/models"
-	"github.com/go-playground/validator/v10"
+	"example/APIForWorldWorkHub/utils"
 )
 
-func AddService(context *gin.Context, validate *validator.Validate) {
+func AddService(context *gin.Context) {
 	var newService models.Service
 	if err := context.BindJSON(&newService); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
@@ -16,7 +16,7 @@ func AddService(context *gin.Context, validate *validator.Validate) {
 	}
 
 	// Validate the service
-	if err := validate.Struct(newService); err != nil {
+	if err := utils.Validate.Struct(newService); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
 		return
 	}
