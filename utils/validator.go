@@ -12,6 +12,7 @@ func InitValidator() {
 	Validate.RegisterValidation("zipcode", validateZipCode)
 	Validate.RegisterValidation("password", passwordValidator)
 	Validate.RegisterValidation("phone", validatePhone)
+	Validate.RegisterValidation("cpf", validateCPF)
 }
 
 func validateZipCode(fl validator.FieldLevel) bool {
@@ -39,4 +40,13 @@ func passwordValidator(fl validator.FieldLevel) bool {
 func validatePhone(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
 	return len(phone) == 11 || len(phone) == 13
+}
+
+func validateCPF(fl validator.FieldLevel) bool {
+	cpfPtr := fl.Field().Interface().(*string)
+	if cpfPtr == nil {
+		return true // CPF é opcional, então é válido se estiver vazio
+	}
+	// Verifica se o CPF tem exatamente 11 dígitos
+	return len(*cpfPtr) == 11
 }
