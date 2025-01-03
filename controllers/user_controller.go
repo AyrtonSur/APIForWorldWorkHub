@@ -26,10 +26,10 @@ func Register(context *gin.Context) {
 		Lastname       string  `json:"lastname" validate:"required"`
 		Email          string  `json:"email" validate:"required,email"`
 		Password       string  `json:"password" validate:"required,password"`
-		CPF            *string `json:"CPF"`
+		CPF            *string `json:"CPF" validate:"omitempty,cpf"`
 		Role           string  `json:"role" validate:"required"`
 		OccupationName string  `json:"occupation" validate:"required"`
-		Phone          string  `json:"phone" validate:"required"`
+		Phone          string  `json:"phone" validate:"required, phone"`
 		Education      string  `json:"education" validate:"required"`
 		Region         string  `json:"region" validate:"required"`
 		City           string  `json:"city" validate:"required"`
