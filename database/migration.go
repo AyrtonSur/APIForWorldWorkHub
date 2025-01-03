@@ -2,57 +2,39 @@ package database
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"example/APIForWorldWorkHub/models"
+	"example/APIForWorldWorkHub/data"
 )
 
 var DB *gorm.DB
 
 func InitialMigration() {
+	dataPath := "data"
+	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
+		os.Mkdir(dataPath, os.ModePerm)
+	}
+
+	dbPath := filepath.Join(dataPath, "test.db")
+
 	var err error
-	DB, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("failed to connect database")
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{})
+	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{}, &models.Region{})
 
-	occupations := []models.Occupation{
-		{Name: "Cleaner"},
-		{Name: "Lawyer"},
-		{Name: "Doctor"},
-		{Name: "Engineer"},
-		{Name: "Teacher"},
-		{Name: "Nurse"},
-		{Name: "Accountant"},
-		{Name: "Architect"},
-		{Name: "Chef"},
-		{Name: "Dentist"},
-		{Name: "Electrician"},
-		{Name: "Mechanic"},
-		{Name: "Pharmacist"},
-		{Name: "Plumber"},
-		{Name: "Software Developer"},
-		{Name: "Graphic Designer"},
-		{Name: "Journalist"},
-		{Name: "Photographer"},
-		{Name: "Pilot"},
-		{Name: "Police Officer"},
-		{Name: "Scientist"},
-		{Name: "Veterinarian"},
-		{Name: "Writer"},
-		{Name: "Musician"},
-		{Name: "Artist"},
-		{Name: "Therapist"},
-		{Name: "Translator"},
-		{Name: "Web Developer"},
-		{Name: "Data Analyst"},
-		{Name: "Marketing Specialist"},
-	}
-
-	for _, occupation := range occupations {
+	for _, occupation := range data.Occupations {
 		DB.FirstOrCreate(&occupation, models.Occupation{Name: occupation.Name})
+}
+
+	// Adicionar estados dos EUA
+	for _, state := range data.States {
+		DB.FirstOrCreate(&state, models.Region{Name: state.Name, Abbreviation: state.Abbreviation})
 	}
 }
