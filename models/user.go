@@ -16,6 +16,7 @@ type User struct {
 	OccupationID     *string       
 	Occupation       *Occupation `gorm:"foreignKey:OccupationID"`
 	Phone            string     `json:"phone"`
+	ZipCode          string     `json:"zipcode"`
 	Education        string     `json:"education"`
 	Region           string     `json:"region"`
 	City             string     `json:"city"`
