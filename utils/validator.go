@@ -11,6 +11,7 @@ func InitValidator() {
 	Validate = validator.New()
 	Validate.RegisterValidation("zipcode", validateZipCode)
 	Validate.RegisterValidation("password", passwordValidator)
+	Validate.RegisterValidation("phone", validatePhone)
 }
 
 func validateZipCode(fl validator.FieldLevel) bool {
@@ -32,5 +33,10 @@ func validateZipCode(fl validator.FieldLevel) bool {
 
 func passwordValidator(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
-	return len(password) >= 4
+	return len(password) >= 8
+}
+
+func validatePhone(fl validator.FieldLevel) bool {
+	phone := fl.Field().String()
+	return len(phone) == 11 || len(phone) == 13
 }
