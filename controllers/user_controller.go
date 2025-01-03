@@ -10,14 +10,54 @@ import (
 	"example/APIForWorldWorkHub/utils"
 )
 
+type UserResponse struct {
+	ID              string     `json:"id"`
+	Firstname       string     `json:"firstname"`
+	Lastname        string     `json:"lastname"`
+	Email           string     `json:"email"`
+	Role            string     `json:"role"`
+	Occupation      string     `json:"occupation"`
+	Phone           string     `json:"phone"`
+	Education       string     `json:"education"`
+	Region          string     `json:"region"`
+	City            string     `json:"city"`
+	ZipCode         string     `json:"zipcode"`
+	Services        []models.Service  `json:"services"`
+	SpokenLanguages []models.Language `json:"languages"`
+}
+
+func mapUserToResponse(user models.User) UserResponse {
+	return UserResponse{
+		ID:              user.ID,
+		Firstname:       user.Firstname,
+		Lastname:        user.Lastname,
+		Email:           user.Email,
+		Role:            user.Role,
+		Occupation:      user.Occupation.Name,
+		Phone:           user.Phone,
+		Education:       user.Education,
+		Region:          user.Region.Abbreviation,
+		City:            user.City,
+		ZipCode:         user.ZipCode,
+		Services:        user.Services,
+		SpokenLanguages: user.SpokenLanguages,
+	}
+}
+
 func GetUsers(context *gin.Context) {
 	var users []models.User
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Find(&users).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Find(&users).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve users"})
 		return
 	}
 
-	context.IndentedJSON(http.StatusOK, users)
+	var userResponses []UserResponse
+	for _, user := range users {
+			userResponse := mapUserToResponse(user)
+			userResponses = append(userResponses, userResponse)
+	}
+
+	context.IndentedJSON(http.StatusOK, userResponses)
 }
 
 func Register(context *gin.Context) {
@@ -29,7 +69,7 @@ func Register(context *gin.Context) {
 		CPF            *string `json:"CPF" validate:"omitempty,cpf"`
 		Role           string  `json:"role" validate:"required"`
 		OccupationName string  `json:"occupation" validate:"required"`
-		Phone          string  `json:"phone" validate:"required, phone"`
+		Phone          string  `json:"phone" validate:"required,phone"`
 		Education      string  `json:"education" validate:"required"`
 		Region         string  `json:"region" validate:"required"`
 		City           string  `json:"city" validate:"required"`
@@ -85,13 +125,14 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
-
-	context.IndentedJSON(http.StatusCreated, newUser)
+	
+	userResponse := mapUserToResponse(newUserModel)
+	context.IndentedJSON(http.StatusCreated, userResponse)
 }
 
 func GetUserById(id string) (*models.User, error) {
 	var user models.User
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Where("id = ?", id).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, errors.New("user not found")
 	}
 
@@ -107,7 +148,8 @@ func GetUser(context *gin.Context) {
 		return
 	}
 
-	context.IndentedJSON(http.StatusOK, user)
+	userResponse := mapUserToResponse(*user)
+	context.IndentedJSON(http.StatusOK, userResponse)
 }
 
 func Login(context *gin.Context) {
