@@ -126,12 +126,11 @@ func Register(context *gin.Context) {
 		return
 	}
 	
-	    // Recarregar o usuário com os relacionamentos
+	// Recarregar o usuário com os relacionamentos
 	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
-	
 	
 	userResponse := mapUserToResponse(newUserModel)
 	context.IndentedJSON(http.StatusCreated, userResponse)
