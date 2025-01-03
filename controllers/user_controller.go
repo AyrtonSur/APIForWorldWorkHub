@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/models"
@@ -21,7 +20,7 @@ func GetUsers(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, users)
 }
 
-func Register(context *gin.Context, validate *validator.Validate) {
+func Register(context *gin.Context) {
 	var newUser struct {
 		Firstname      string  `json:"firstname" validate:"required"`
 		Lastname       string  `json:"lastname" validate:"required"`
@@ -44,7 +43,7 @@ func Register(context *gin.Context, validate *validator.Validate) {
 
 
 	// Validate the user
-	if err := validate.Struct(newUser); err != nil {
+	if err := utils.Validate.Struct(newUser); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
 		return
 	}
@@ -63,7 +62,23 @@ func Register(context *gin.Context, validate *validator.Validate) {
 	}
 	newUser.Password = string(hashedPassword)
 
-	if err := database.DB.Create(&newUser).Error; err != nil {
+	// Cria o usuário com a Occupation associada
+	newUserModel := models.User{
+		Firstname:      newUser.Firstname,
+		Lastname:       newUser.Lastname,
+		Email:          newUser.Email,
+		PasswordDigest: newUser.Password,
+		CPF:            newUser.CPF,
+		Role:           newUser.Role,
+		OccupationID:   &occupation.ID,
+		Phone:          newUser.Phone,
+		Education:      newUser.Education,
+		Region:         newUser.Region,
+		City:           newUser.City,
+		ZipCode:        newUser.ZipCode,
+	}
+
+	if err := database.DB.Create(&newUserModel).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
@@ -92,7 +107,7 @@ func GetUser(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, user)
 }
 
-func Login(context *gin.Context, validate *validator.Validate) {
+func Login(context *gin.Context) {
 	var input struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
@@ -103,7 +118,7 @@ func Login(context *gin.Context, validate *validator.Validate) {
 		return
 	}
 
-	if err := validate.Struct(input); err != nil {
+	if err := utils.Validate.Struct(input); err != nil {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
 		return
 	}
