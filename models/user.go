@@ -18,7 +18,8 @@ type User struct {
 	Phone            string     `json:"phone"`
 	ZipCode          string     `json:"zipcode"`
 	Education        string     `json:"education"`
-	Region           string     `json:"region"`
+	RegionID         string
+	Region           Region     `gorm:"foreignKey:RegionID"`
 	City             string     `json:"city"`
 	Services         []Service  `gorm:"foreignkey:UserID"`
 	SpokenLanguages  []Language `gorm:"foreignkey:UserID"`
