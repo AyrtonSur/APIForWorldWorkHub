@@ -193,3 +193,101 @@ func Login(context *gin.Context) {
 
 	context.JSON(http.StatusOK, gin.H{"token": token})
 }
+
+type UpdateUserInput struct {
+	Firstname      *string `json:"firstname"`
+	Lastname       *string `json:"lastname"`
+	CPF            *string `json:"CPF" validate:"omitempty,cpf"`
+	Role           *string `json:"role"`
+	OccupationName *string `json:"occupation"`
+	Phone          *string `json:"phone" validate:"omitempty,phone"`
+	Education      *string `json:"education"`
+	Region         *string `json:"region"`
+	City           *string `json:"city"`
+	ZipCode        *string `json:"zipcode" validate:"omitempty,zipcode"`
+}
+
+func UpdateUser(context *gin.Context) {
+	id := context.Param("id")
+	var input UpdateUserInput
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if err := utils.Validate.Struct(input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.Where("id = ?", id).First(&user).Error; err != nil {
+		context.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	if input.Firstname != nil {
+		user.Firstname = *input.Firstname
+	}
+
+	if input.Lastname != nil {
+		user.Lastname = *input.Lastname
+	}
+
+	if input.CPF != nil {
+		user.CPF = input.CPF
+	}
+
+	if input.Role != nil {
+		user.Role = *input.Role
+	}
+	
+	if input.OccupationName != nil {
+		var occupation models.Occupation
+		if err := database.DB.First(&occupation, "name = ?", *input.OccupationName).Error; err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Occupation Not Found"})
+			return
+		}
+
+		user.OccupationID = &occupation.ID
+	}
+
+	if input.Phone != nil {
+		user.Phone = *input.Phone
+	}
+
+	if input.Education != nil {
+		user.Education = *input.Education
+	}
+
+	if input.Region != nil {
+		var region models.Region
+		if err := database.DB.Where("name = ? OR abbreviation = ?", *input.Region, *input.Region).First(&region).Error; err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Region Not Found"})
+			return
+		}
+		user.RegionID = region.ID
+	}
+
+	if input.City != nil {
+		user.City = *input.City
+	}
+	
+	if input.ZipCode != nil {
+		user.ZipCode = *input.ZipCode
+	}
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update user"})
+		return
+	}
+
+	// Recarregar o usuário com os relacionamentos
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", user.ID).First(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
+		return
+	}
+
+	userResponse := mapUserToResponse(user)
+	context.IndentedJSON(http.StatusOK, userResponse)
+}
