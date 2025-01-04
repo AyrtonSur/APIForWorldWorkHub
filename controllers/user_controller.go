@@ -291,3 +291,20 @@ func UpdateUser(context *gin.Context) {
 	userResponse := mapUserToResponse(user)
 	context.IndentedJSON(http.StatusOK, userResponse)
 }
+
+func DeleteUser(context *gin.Context) {
+	id := context.Param("id")
+
+	var user models.User
+	if err := database.DB.Where("id = ?", id).First(&user).Error; err != nil {
+		context.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	if err := database.DB.Delete(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete user"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
