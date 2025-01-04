@@ -17,5 +17,7 @@ func SetupRoutes(router *gin.Engine) {
 		auth.GET("/users", controllers.GetUsers)
 		auth.GET("/users/:id", controllers.GetUser)
 		auth.POST("/services", controllers.AddService)
+		auth.PATCH("/users/:id", controllers.UpdateUser)
+		auth.DELETE("/users/:id", controllers.DeleteUser)
 	}
 }
