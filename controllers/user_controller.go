@@ -86,21 +86,36 @@ func Register(context *gin.Context) {
 		return
 	}
 
+	// Verificar se já existe um usuário com o mesmo email
+	var existingUser models.User
+	if err := database.DB.Where("email = ?", newUser.Email).First(&existingUser).Error; err == nil {
+		context.IndentedJSON(http.StatusConflict, gin.H{"message": "Email already in use"})
+		return
+	}
+
+	// Verificar se já existe um usuário com o mesmo CPF
+	if newUser.CPF != nil {
+		if err := database.DB.Where("cpf = ?", *newUser.CPF).First(&existingUser).Error; err == nil {
+			context.IndentedJSON(http.StatusConflict, gin.H{"message": "CPF already in use"})
+			return
+		}
+	}
+
 	var occupation models.Occupation
 	if err := database.DB.First(&occupation, "name = ?", newUser.OccupationName).Error; err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
 
 	var region models.Region
 	if err := database.DB.Where("name = ? OR abbreviation = ?", newUser.Region, newUser.Region).First(&region).Error; err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Region Not Found", "errors": err.Error()})
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Region Not Found", "errors": err.Error()})
 		return
 	}
 
 	var role models.Role
 	if err := database.DB.Where("name = ?", newUser.Role).First(&role).Error; err != nil {
-		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
 	
@@ -276,7 +291,7 @@ func UpdateUser(context *gin.Context) {
 			context.JSON(http.StatusBadRequest, gin.H{"message": "Region Not Found"})
 			return
 		}
-		
+
 		user.RegionID = region.ID
 	}
 
