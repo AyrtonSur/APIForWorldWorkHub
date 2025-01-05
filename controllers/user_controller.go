@@ -256,8 +256,12 @@ func UpdateUser(context *gin.Context) {
 	}
 
 	if input.CPF != nil {
-		user.CPF = input.CPF
-	}
+		var existingUser models.User
+		if err := database.DB.Where("cpf = ? AND id != ?", *input.CPF, id).First(&existingUser).Error; err == nil {
+			context.JSON(http.StatusConflict, gin.H{"message": "CPF already in use"})
+			return
+		}
+}
 
 	if input.Role != nil {
 		var role models.Role
