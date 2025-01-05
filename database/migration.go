@@ -27,7 +27,7 @@ func InitialMigration() {
 		panic("failed to connect database")
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{}, &models.Region{})
+	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{}, &models.Region{}, &models.Role{})
 
 	for _, occupation := range data.Occupations {
 		DB.FirstOrCreate(&occupation, models.Occupation{Name: occupation.Name})
@@ -36,5 +36,9 @@ func InitialMigration() {
 	// Adicionar estados dos EUA
 	for _, state := range data.States {
 		DB.FirstOrCreate(&state, models.Region{Name: state.Name, Abbreviation: state.Abbreviation})
+	}
+
+	for _, role := range data.Roles {
+		DB.FirstOrCreate(&role, models.Role{Name: role.Name})
 	}
 }
