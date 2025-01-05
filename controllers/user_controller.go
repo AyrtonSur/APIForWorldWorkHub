@@ -32,7 +32,7 @@ func mapUserToResponse(user models.User) UserResponse {
 		Firstname:       user.Firstname,
 		Lastname:        user.Lastname,
 		Email:           user.Email,
-		Role:            user.Role,
+		Role:            user.Role.Name,
 		Occupation:      user.Occupation.Name,
 		Phone:           user.Phone,
 		Education:       user.Education,
@@ -46,7 +46,7 @@ func mapUserToResponse(user models.User) UserResponse {
 
 func GetUsers(context *gin.Context) {
 	var users []models.User
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Find(&users).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Find(&users).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve users"})
 		return
 	}
@@ -97,6 +97,12 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Region Not Found", "errors": err.Error()})
 		return
 	}
+
+	var role models.Role
+	if err := database.DB.Where("name = ?", newUser.Role).First(&role).Error; err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		return
+	}
 	
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
@@ -112,7 +118,7 @@ func Register(context *gin.Context) {
 		Email:          newUser.Email,
 		PasswordDigest: string(hashedPassword),
 		CPF:            newUser.CPF,
-		Role:           newUser.Role,
+		RoleID:         role.ID,
 		OccupationID:   &occupation.ID,
 		Phone:          newUser.Phone,
 		Education:      newUser.Education,
@@ -127,7 +133,7 @@ func Register(context *gin.Context) {
 	}
 	
 	// Recarregar o usuário com os relacionamentos
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
@@ -138,7 +144,7 @@ func Register(context *gin.Context) {
 
 func GetUserById(id string) (*models.User, error) {
 	var user models.User
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", id).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, errors.New("user not found")
 	}
 
@@ -239,7 +245,11 @@ func UpdateUser(context *gin.Context) {
 	}
 
 	if input.Role != nil {
-		user.Role = *input.Role
+		var role models.Role
+		if err := database.DB.First(&role, "name = ?", *input.Role).Error; err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Role Not Found"})
+			return
+		}
 	}
 	
 	if input.OccupationName != nil {
@@ -283,7 +293,7 @@ func UpdateUser(context *gin.Context) {
 	}
 
 	// Recarregar o usuário com os relacionamentos
-	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Where("id = ?", user.ID).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", user.ID).First(&user).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
