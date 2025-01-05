@@ -276,6 +276,7 @@ func UpdateUser(context *gin.Context) {
 			context.JSON(http.StatusBadRequest, gin.H{"message": "Region Not Found"})
 			return
 		}
+		
 		user.RegionID = region.ID
 	}
 
