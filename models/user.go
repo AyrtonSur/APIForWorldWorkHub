@@ -12,7 +12,8 @@ type User struct {
 	Email            string      `json:"email" gorm:"uniqueIndex" validate:"required,email"`
 	PasswordDigest   string      `json:"password_digest" validate:"required,password"`
 	CPF              *string     `json:"CPF" gorm:"uniqueIndex"`
-	Role             string      `json:"role" validate:"required"`
+	RoleID           string
+	Role             Role        `gorm:"foreignKey:RoleID"`
 	OccupationID     *string       
 	Occupation       *Occupation `gorm:"foreignKey:OccupationID"`
 	Phone            string      `json:"phone"`
