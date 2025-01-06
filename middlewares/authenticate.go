@@ -22,7 +22,7 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		context.Set("email", claims.Email)
+		context.Set("userID", claims.ID)
 		context.Next()
 	}
 }
