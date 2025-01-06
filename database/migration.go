@@ -7,7 +7,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"example/APIForWorldWorkHub/models"
-	"example/APIForWorldWorkHub/data"
+	"example/APIForWorldWorkHub/seed"
 )
 
 var DB *gorm.DB
@@ -27,18 +27,18 @@ func InitialMigration() {
 		panic("failed to connect database")
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Service{}, &models.Language{}, &models.Occupation{}, &models.Region{}, &models.Role{})
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Service{},
+		&models.Language{},
+		&models.Occupation{},
+		&models.Region{},
+		&models.Role{},
+		&models.Permission{},
+	)
 
-	for _, occupation := range data.Occupations {
-		DB.FirstOrCreate(&occupation, models.Occupation{Name: occupation.Name})
-}
-
-	// Adicionar estados dos EUA
-	for _, state := range data.States {
-		DB.FirstOrCreate(&state, models.Region{Name: state.Name, Abbreviation: state.Abbreviation})
-	}
-
-	for _, role := range data.Roles {
-		DB.FirstOrCreate(&role, models.Role{Name: role.Name})
-	}
+	seed.InitializeOccupations(DB)
+	seed.InitializeStates(DB)
+	seed.InitializeRoles(DB)
+	seed.InitializePermissions(DB)
 }
