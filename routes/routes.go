@@ -14,10 +14,10 @@ func SetupRoutes(router *gin.Engine) {
 	auth := router.Group("/")
 	auth.Use(middlewares.Authenticate())
 	{
-		auth.GET("/users", controllers.GetUsers)
-		auth.GET("/users/:id", controllers.GetUser)
-		auth.POST("/services", controllers.AddService)
-		auth.PATCH("/users/:id", controllers.UpdateUser)
-		auth.DELETE("/users/:id", controllers.DeleteUser)
+		auth.GET("/users", middlewares.Authorize("view_users"), controllers.GetUsers)
+		auth.GET("/users/:id", middlewares.Authorize("view_user"), controllers.GetUser)
+		auth.POST("/services", middlewares.Authorize("create_service"), controllers.AddService)
+		auth.PATCH("/users/:id", middlewares.Authorize("update_user"), controllers.UpdateUser)
+		auth.DELETE("/users/:id", middlewares.Authorize("delete_user"), controllers.DeleteUser)
 	}
 }
