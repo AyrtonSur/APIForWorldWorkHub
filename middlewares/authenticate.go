@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-var jwtKey = []byte("sua-chave-secreta")
-
 func Authenticate() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		tokenString := context.GetHeader("Authorization")
