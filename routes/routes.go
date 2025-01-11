@@ -19,5 +19,6 @@ func SetupRoutes(router *gin.Engine) {
 		auth.POST("/services", middlewares.Authorize("create_service"), controllers.AddService)
 		auth.PATCH("/users/:id", middlewares.AuthorizeSelfOrPermission("update_user"), controllers.UpdateUser)
 		auth.DELETE("/users/:id", middlewares.Authorize("delete_user"), controllers.DeleteUser)
+		auth.GET("/services", middlewares.Authorize("view_services"), controllers.GetServices)
 	}
 }
