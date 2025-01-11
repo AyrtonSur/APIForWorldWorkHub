@@ -49,3 +49,13 @@ func AddService(context *gin.Context) {
 
 	context.IndentedJSON(http.StatusCreated, newService)
 }
+
+func GetServices(context *gin.Context) {
+	var services []models.Service
+	if err := database.DB.Find(&services).Error; err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrieve services"})
+		return
+	}
+
+	context.IndentedJSON(http.StatusOK, services)
+}
