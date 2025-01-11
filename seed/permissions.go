@@ -12,6 +12,7 @@ func InitializePermissions(db *gorm.DB) {
 		{Name: "create_service"},
 		{Name: "update_user"},
 		{Name: "delete_user"},
+		{Name: "view_services"},
 	}
 
 	for _, permission := range permissions {
