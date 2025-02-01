@@ -103,7 +103,7 @@ func Register(context *gin.Context) {
 
 	var occupation models.Occupation
 	if err := database.DB.First(&occupation, "name = ?", newUser.OccupationName).Error; err != nil {
-		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Occupation Not Found", "errors": err.Error()})
 		return
 	}
 
