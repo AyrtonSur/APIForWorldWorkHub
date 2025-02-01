@@ -22,13 +22,13 @@ func validateZipCode(fl validator.FieldLevel) bool {
 	if !regex.MatchString(zipCode) {
 		return false
 	}
-
+	
 	// Verifica se o ZipCode realmente existe
 	exists, err := ValidateZipCode(zipCode)
 	if err != nil || !exists {
 		return false
 	}
-
+	
 	return true
 }
 
@@ -43,10 +43,27 @@ func validatePhone(fl validator.FieldLevel) bool {
 }
 
 func validateCPF(fl validator.FieldLevel) bool {
-	cpfPtr := fl.Field().Interface().(*string)
-	if cpfPtr == nil {
-		return true // CPF é opcional, então é válido se estiver vazio
+	field := fl.Field().Interface()
+	
+	var cpf string
+	
+	switch v := field.(type) {
+		case *string: // Caso o campo seja um ponteiro para string
+			if v == nil {
+				return true // Válido se for nil (omitempty)
+			}
+			cpf = *v
+		case string: // Caso o campo seja uma string
+			cpf = v
+			default:
+			return false // Tipo inválido
 	}
+	
+	// Considera válido se vazio devido ao omitempty
+	if cpf == "" {
+		return true
+	}
+	
 	// Verifica se o CPF tem exatamente 11 dígitos
-	return len(*cpfPtr) == 11
+	return len(cpf) == 11
 }
