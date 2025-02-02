@@ -12,7 +12,7 @@ func Authorize(permission string) gin.HandlerFunc {
 		userID := c.GetString("userID") // Assumindo que o ID do usuário está armazenado no contexto
 		var user models.User
 		if err := database.DB.Preload("Role.Permissions").Where("id = ?", userID).First(&user).Error; err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "User not found"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "User not authenticated"})
 			c.Abort()
 			return
 		}
