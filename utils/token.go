@@ -1,21 +1,23 @@
 package utils
 
 import (
-	"github.com/golang-jwt/jwt/v5"
-	"time"
+    "time"
+    "github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("sua-chave-secreta") // Mantenha esta chave privada
+var jwtKey = []byte("your_secret_key")
 
 type Claims struct {
-	Email string `json:"email"`
+	ID string `json:"id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(email string) (string, error) {
-	claims := &jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+func GenerateJWT(userID string) (string, error) {
+	claims := &Claims{
+		ID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
