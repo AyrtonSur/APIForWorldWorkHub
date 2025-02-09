@@ -211,7 +211,8 @@ func Login(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"token": token})
+	userResponse := mapUserToResponse(user)
+	context.JSON(http.StatusOK, gin.H{ "user": userResponse, "token": token })
 }
 
 type UpdateUserInput struct {
