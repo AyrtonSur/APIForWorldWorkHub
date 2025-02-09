@@ -26,5 +26,6 @@ func SetupRoutes(router *gin.Engine) {
 		auth.POST("/roles", middlewares.Authorize("create_role"), controllers.CreateRole)
 		auth.GET("/roles", middlewares.Authorize("view_roles"), controllers.GetRoles)
 		auth.DELETE("/roles", middlewares.Authorize("delete_role"), controllers.DeleteRole)
+		auth.GET("/current-user", controllers.GetCurrentUser)
 	}
 }

@@ -530,3 +530,28 @@ func CreateUser(context *gin.Context) {
 	userResponse := mapUserToResponse(newUserModel)
 	context.IndentedJSON(http.StatusCreated, userResponse)
 }
+
+func currentUser(c *gin.Context) (*models.User, error) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		return nil, errors.New("user not found in context")
+	}
+
+	var user models.User
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	return &user, nil
+}
+
+func GetCurrentUser(context *gin.Context) {
+	user, err := currentUser(context)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	userResponse := mapUserToResponse(*user)
+	context.JSON(http.StatusOK, userResponse)
+}
