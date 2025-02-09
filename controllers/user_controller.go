@@ -195,7 +195,7 @@ func Login(context *gin.Context) {
 	}
 
 	var user models.User
-	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("email = ?", input.Email).First(&user).Error; err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Credentials"})
 		return
 	}
