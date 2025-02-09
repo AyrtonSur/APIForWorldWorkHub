@@ -5,6 +5,7 @@ import (
 	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/models"
 	"example/APIForWorldWorkHub/utils"
+	"fmt"
 	"net/http"
 	"os"
 	"github.com/gin-gonic/gin"
@@ -228,6 +229,8 @@ func Login(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
+
+	fmt.Println(user)
 
 	secure := os.Getenv("GIN_MODE") == "release"
 
