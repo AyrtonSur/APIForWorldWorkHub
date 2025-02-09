@@ -223,8 +223,11 @@ func Login(context *gin.Context) {
 		return
 	}
 
+	context.SetCookie("refresh_token", refreshToken, 7*24*60*60, "/", "", true, true)
+
+
 	userResponse := mapUserToResponse(user)
-	context.JSON(http.StatusOK, gin.H{"user": userResponse, "access_token": accessToken, "refresh_token": refreshToken})
+	context.JSON(http.StatusOK, gin.H{"user": userResponse, "access_token": accessToken})
 }
 
 func RefreshToken(context *gin.Context) {
@@ -255,19 +258,21 @@ func RefreshToken(context *gin.Context) {
 		return
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	newRefreshToken, err := utils.GenerateRefreshToken(user.ID)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate refresh token"})
 		return
 	}
 
-	user.RefreshToken = refreshToken
+	user.RefreshToken = newRefreshToken
 	if err := database.DB.Save(&user).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save refresh token"})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	context.SetCookie("refresh_token", newRefreshToken, 7*24*60*60, "/", "", true, true)
+
+	context.JSON(http.StatusOK, gin.H{"access_token": accessToken})
 }
 
 func Logout(context *gin.Context) {
@@ -284,6 +289,9 @@ func Logout(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not log out"})
 		return
 	}
+
+	// Remover o refresh token do cookie
+	context.SetCookie("refresh_token", "", -1, "/", "", true, true)
 
 	context.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
