@@ -205,14 +205,87 @@ func Login(context *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID)
+	accessToken, err := utils.GenerateAccessToken(user.ID)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate token"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate access token"})
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate refresh token"})
+		return
+	}
+
+	user.RefreshToken = refreshToken
+	if err := database.DB.Save(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save refresh token"})
 		return
 	}
 
 	userResponse := mapUserToResponse(user)
-	context.JSON(http.StatusOK, gin.H{ "user": userResponse, "token": token })
+	context.JSON(http.StatusOK, gin.H{"user": userResponse, "access_token": accessToken, "refresh_token": refreshToken})
+}
+
+func RefreshToken(context *gin.Context) {
+	var input struct {
+		RefreshToken string `json:"refresh_token" validate:"required"`
+	}
+
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	claims, err := utils.ValidateToken(input.RefreshToken)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid refresh token"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.Where("id = ? AND refresh_token = ?", claims.ID, input.RefreshToken).First(&user).Error; err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid refresh token"})
+		return
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.ID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate access token"})
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate refresh token"})
+		return
+	}
+
+	user.RefreshToken = refreshToken
+	if err := database.DB.Save(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save refresh token"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+}
+
+func Logout(context *gin.Context) {
+	userID := context.GetString("userID")
+
+	var user models.User
+	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid user"})
+		return
+	}
+
+	user.RefreshToken = ""
+	if err := database.DB.Save(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not log out"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
 type UpdateUserInput struct {

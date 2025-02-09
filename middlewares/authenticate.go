@@ -15,7 +15,7 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := utils.ValidateJWT(tokenString)
+		claims, err := utils.ValidateToken(tokenString)
 		if err != nil || claims == nil {
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			context.Abort()

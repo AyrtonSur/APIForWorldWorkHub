@@ -22,6 +22,7 @@ type User struct {
 	RegionID         string
 	Region           Region      `gorm:"foreignKey:RegionID"`
 	City             string      `json:"city"`
+	RefreshToken     string       `gorm:"unique"`
 	Services         []Service   `gorm:"foreignkey:UserID"`
 	SpokenLanguages  []Language  `gorm:"foreignkey:UserID"`
 }
