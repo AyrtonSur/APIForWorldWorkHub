@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"errors"
-	"net/http"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/models"
 	"example/APIForWorldWorkHub/utils"
+	"net/http"
+	"os"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserResponse struct {
@@ -223,7 +224,9 @@ func Login(context *gin.Context) {
 		return
 	}
 
-	context.SetCookie("refresh_token", refreshToken, 7*24*60*60, "/", "", true, true)
+	secure := os.Getenv("GIN_MODE") == "release"
+
+	context.SetCookie("refresh_token", refreshToken, 7*24*60*60, "/", "", secure, true)
 
 
 	userResponse := mapUserToResponse(user)
@@ -270,7 +273,9 @@ func RefreshToken(context *gin.Context) {
 		return
 	}
 
-	context.SetCookie("refresh_token", newRefreshToken, 7*24*60*60, "/", "", true, true)
+	secure := os.Getenv("GIN_MODE") == "release"
+
+	context.SetCookie("refresh_token", newRefreshToken, 7*24*60*60, "/", "", secure, true)
 
 	context.JSON(http.StatusOK, gin.H{"access_token": accessToken})
 }
@@ -289,9 +294,11 @@ func Logout(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not log out"})
 		return
 	}
+	
+	secure := os.Getenv("GIN_MODE") == "release"
 
 	// Remover o refresh token do cookie
-	context.SetCookie("refresh_token", "", -1, "/", "", true, true)
+	context.SetCookie("refresh_token", "", -1, "/", "", secure, true)
 
 	context.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
