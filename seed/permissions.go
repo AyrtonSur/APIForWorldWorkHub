@@ -13,6 +13,10 @@ func InitializePermissions(db *gorm.DB) error {
 		{Name: "update_user"},
 		{Name: "delete_user"},
 		{Name: "view_services"},
+		{Name: "create_user"},
+		{Name: "create_role"},
+		{Name: "delete_role"},
+		{Name: "view_roles"},
 	}
 
 	for i, permission := range permissions {
