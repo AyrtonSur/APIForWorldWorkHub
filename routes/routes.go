@@ -20,5 +20,9 @@ func SetupRoutes(router *gin.Engine) {
 		auth.PATCH("/users/:id", middlewares.AuthorizeSelfOrPermission("update_user"), controllers.UpdateUser)
 		auth.DELETE("/users/:id", middlewares.Authorize("delete_user"), controllers.DeleteUser)
 		auth.GET("/services", middlewares.Authorize("view_services"), controllers.GetServices)
+		auth.POST("/users/create", middlewares.Authorize("create_user"), controllers.CreateUser)
+		auth.POST("/roles", middlewares.Authorize("create_role"), controllers.CreateRole)
+		auth.GET("/roles", middlewares.Authorize("view_roles"), controllers.GetRoles)
+		auth.DELETE("/roles", middlewares.Authorize("delete_role"), controllers.DeleteRole)
 	}
 }
