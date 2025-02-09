@@ -224,10 +224,14 @@ func Login(context *gin.Context) {
 		return
 	}
 
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", user.ID).First(&user).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
+		return
+	}
+
 	secure := os.Getenv("GIN_MODE") == "release"
 
 	context.SetCookie("refresh_token", refreshToken, 7*24*60*60, "/", "", secure, true)
-
 
 	userResponse := mapUserToResponse(user)
 	context.JSON(http.StatusOK, gin.H{"user": userResponse, "access_token": accessToken})
@@ -294,7 +298,7 @@ func Logout(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not log out"})
 		return
 	}
-	
+
 	secure := os.Getenv("GIN_MODE") == "release"
 
 	// Remover o refresh token do cookie
