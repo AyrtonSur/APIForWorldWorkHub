@@ -15,6 +15,7 @@ func SetupRoutes(router *gin.Engine) {
 	auth := router.Group("/")
 	auth.Use(middlewares.Authenticate())
 	{
+		auth.POST("/logout", controllers.Logout)
 		auth.GET("/users", middlewares.Authorize("view_users"), controllers.GetUsers)
 		auth.GET("/users/:id", middlewares.Authorize("view_user"), controllers.GetUser)
 		auth.POST("/services", middlewares.Authorize("create_service"), controllers.AddService)
