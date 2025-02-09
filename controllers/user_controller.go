@@ -67,7 +67,6 @@ func Register(context *gin.Context) {
 		Email          string  `json:"email" validate:"required,email"`
 		Password       string  `json:"password" validate:"required,password"`
 		CPF            *string `json:"CPF" validate:"omitempty,cpf"`
-		Role           string  `json:"role" validate:"required"`
 		OccupationName string  `json:"occupation" validate:"required"`
 		Phone          string  `json:"phone" validate:"required,phone"`
 		Education      string  `json:"education" validate:"required"`
@@ -114,7 +113,7 @@ func Register(context *gin.Context) {
 	}
 
 	var role models.Role
-	if err := database.DB.Where("name = ?", newUser.Role).First(&role).Error; err != nil {
+	if err := database.DB.Where("name = ?", "User").First(&role).Error; err != nil {
 		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
@@ -337,4 +336,101 @@ func DeleteUser(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func CreateUser(context *gin.Context) {
+	var newUser struct {
+		Firstname      string  `json:"firstname" validate:"required"`
+		Lastname       string  `json:"lastname" validate:"required"`
+		Email          string  `json:"email" validate:"required,email"`
+		Password       string  `json:"password" validate:"required,password"`
+		CPF            *string `json:"CPF" validate:"omitempty,cpf"`
+		OccupationName string  `json:"occupation" validate:"required"`
+		Phone          string  `json:"phone" validate:"required,phone"`
+		Role           string  `json:"role" validate:"required"`
+		Education      string  `json:"education" validate:"required"`
+		Region         string  `json:"region" validate:"required"`
+		City           string  `json:"city" validate:"required"`
+		ZipCode        string  `json:"zipcode" validate:"required,zipcode"`
+	}
+
+	if err := context.BindJSON(&newUser); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
+		return
+	}
+
+	if err := utils.Validate.Struct(newUser); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
+		return
+	}
+
+	// Verificar se já existe um usuário com o mesmo email
+	var existingUser models.User
+	if err := database.DB.Where("email = ?", newUser.Email).First(&existingUser).Error; err == nil {
+		context.IndentedJSON(http.StatusConflict, gin.H{"message": "Email already in use"})
+		return
+	}
+
+	// Verificar se já existe um usuário com o mesmo CPF
+	if newUser.CPF != nil {
+		if err := database.DB.Where("cpf = ?", *newUser.CPF).First(&existingUser).Error; err == nil {
+			context.IndentedJSON(http.StatusConflict, gin.H{"message": "CPF already in use"})
+			return
+		}
+	}
+
+	var occupation models.Occupation
+	if err := database.DB.First(&occupation, "name = ?", newUser.OccupationName).Error; err != nil {
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Occupation Not Found", "errors": err.Error()})
+		return
+	}
+
+	var region models.Region
+	if err := database.DB.Where("name = ? OR abbreviation = ?", newUser.Region, newUser.Region).First(&region).Error; err != nil {
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Region Not Found", "errors": err.Error()})
+		return
+	}
+
+	var role models.Role
+	if err := database.DB.Where("name = ?", newUser.Role).First(&role).Error; err != nil {
+		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
+		return
+	}
+	
+	// Hash the password before saving the user
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
+		return
+	}
+
+	// Cria o usuário com a Occupation associada e Region associada
+	newUserModel := models.User{
+		Firstname:      newUser.Firstname,
+		Lastname:       newUser.Lastname,
+		Email:          newUser.Email,
+		PasswordDigest: string(hashedPassword),
+		CPF:            newUser.CPF,
+		RoleID:         role.ID,
+		OccupationID:   &occupation.ID,
+		Phone:          newUser.Phone,
+		Education:      newUser.Education,
+		RegionID:       region.ID,
+		City:           newUser.City,
+		ZipCode:        newUser.ZipCode,
+	}
+
+	if err := database.DB.Create(&newUserModel).Error; err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
+		return
+	}
+	
+	// Recarregar o usuário com os relacionamentos
+	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
+		return
+	}
+	
+	userResponse := mapUserToResponse(newUserModel)
+	context.IndentedJSON(http.StatusCreated, userResponse)
 }
