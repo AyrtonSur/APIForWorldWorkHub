@@ -1,12 +1,6 @@
 name: CI
 
-on:
-  push:
-    paths:
-      - '**.go'
-  pull_request:
-    paths:
-      - '**.go'
+on: [push, pull_request]
 
 jobs:
   build:
