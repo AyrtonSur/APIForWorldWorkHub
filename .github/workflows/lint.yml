@@ -1,33 +1,46 @@
 name: Lint
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**.go'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**.go'
 
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.4
+          go-version: '1.23'
       - name: Install dependencies
-        run: go mod tidy
-      - name: Making sure dependecies were installed
-        run: go get
-      - name: Check Go version
-        run: go version
-      - name: List Go dependencies
-        run: go list -m all
-      - name: Cache Go modules
-        uses: actions/cache@v2
+        run: go get .
+      - name: Build
+        run: go build -v ./...
+      - name: Test with the Go CLI
+        run: go test ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-mod-
+          fetch-depth: 1
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
       - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - name: Run golangci-lint
-        run: golangci-lint run
+        run: golangci-lint run ./...
