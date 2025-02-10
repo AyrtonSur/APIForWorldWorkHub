@@ -10,7 +10,7 @@ type Permission struct {
 	Name string `gorm:"unique;not null"`
 }
 
-func (permission *Permission) BeforeCreate(tx *gorm.DB) (err error) {
+func (permission *Permission) BeforeCreate(_ *gorm.DB) (err error) {
 	permission.ID = uuid.New().String()
 	return
 }

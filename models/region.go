@@ -11,7 +11,7 @@ type Region struct {
 	Abbreviation string `gorm:"unique"`
 }
 
-func (region *Region) BeforeCreate(tx *gorm.DB) (err error) {
+func (region *Region) BeforeCreate(_ *gorm.DB) (err error) {
 	region.ID = uuid.New().String()
 	return
 }

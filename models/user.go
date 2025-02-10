@@ -27,7 +27,7 @@ type User struct {
 	SpokenLanguages []Language `gorm:"foreignkey:UserID"`
 }
 
-func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
+func (user *User) BeforeCreate(_ *gorm.DB) (err error) {
 	user.ID = uuid.New().String()
 	return
 }

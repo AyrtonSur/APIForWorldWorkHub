@@ -158,7 +158,7 @@ func Register(context *gin.Context) {
 	context.IndentedJSON(http.StatusCreated, userResponse)
 }
 
-func GetUserById(id string) (*models.User, error) {
+func GetUserByID(id string) (*models.User, error) {
 	var user models.User
 	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, errors.New("user not found")
@@ -169,7 +169,7 @@ func GetUserById(id string) (*models.User, error) {
 
 func GetUser(context *gin.Context) {
 	id := context.Param("id")
-	user, err := GetUserById(id)
+	user, err := GetUserByID(id)
 
 	if err != nil {
 		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "User not found"})

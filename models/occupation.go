@@ -10,7 +10,7 @@ type Occupation struct {
 	Name string `gorm:"unique"`
 }
 
-func (occupation *Occupation) BeforeCreate(tx *gorm.DB) (err error) {
+func (occupation *Occupation) BeforeCreate(_ *gorm.DB) (err error) {
 	occupation.ID = uuid.New().String()
 	return
 }

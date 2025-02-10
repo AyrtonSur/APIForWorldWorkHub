@@ -11,7 +11,7 @@ type Role struct {
 	Permissions []Permission `gorm:"many2many:role_permissions;"`
 }
 
-func (role *Role) BeforeCreate(tx *gorm.DB) (err error) {
+func (role *Role) BeforeCreate(_ *gorm.DB) (err error) {
 	role.ID = uuid.New().String()
 	return
 }

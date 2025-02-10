@@ -11,7 +11,7 @@ type Language struct {
 	UserID string `json:"userId" gorm:"type:uuid" validate:"required"`
 }
 
-func (language *Language) BeforeCreate(tx *gorm.DB) (err error) {
+func (language *Language) BeforeCreate(_ *gorm.DB) (err error) {
 	language.ID = uuid.New().String()
 	return
 }

@@ -14,7 +14,7 @@ type Service struct {
 	Description string    `json:"description" validate:"required"`
 }
 
-func (service *Service) BeforeCreate(tx *gorm.DB) (err error) {
+func (service *Service) BeforeCreate(_ *gorm.DB) (err error) {
 	service.ID = uuid.New().String()
 	return
 }
