@@ -15,6 +15,10 @@ jobs:
         run: go mod tidy
       - name: Making sure dependecies were installed
         run: go get
+      - name: Check Go version
+        run: go version
+      - name: List Go dependencies
+        run: go list -m all
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
