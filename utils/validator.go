@@ -3,16 +3,25 @@ package utils
 import (
 	"regexp"
 	"github.com/go-playground/validator/v10"
+	"log"
 )
 
 var Validate *validator.Validate
 
 func InitValidator() {
 	Validate = validator.New()
-	Validate.RegisterValidation("zipcode", validateZipCode)
-	Validate.RegisterValidation("password", passwordValidator)
-	Validate.RegisterValidation("phone", validatePhone)
-	Validate.RegisterValidation("cpf", validateCPF)
+	if err := Validate.RegisterValidation("zipcode", validateZipCode); err != nil {
+    log.Fatalf("Erro ao registrar validação: %v", err)
+	}
+	if err := Validate.RegisterValidation("password", passwordValidator); err != nil {
+    log.Fatalf("Erro ao registrar validação: %v", err)
+	}
+	if err := Validate.RegisterValidation("phone", validatePhone); err != nil {
+    log.Fatalf("Erro ao registrar validação: %v", err)
+	}
+	if err := Validate.RegisterValidation("cpf", validateCPF); err != nil {
+    log.Fatalf("Erro ao registrar validação: %v", err)
+	}
 }
 
 func validateZipCode(fl validator.FieldLevel) bool {
