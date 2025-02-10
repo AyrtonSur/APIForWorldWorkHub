@@ -22,7 +22,6 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
