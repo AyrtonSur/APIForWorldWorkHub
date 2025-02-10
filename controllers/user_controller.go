@@ -219,7 +219,7 @@ func Login(context *gin.Context) {
 		return
 	}
 
-	user.RefreshToken = refreshToken
+	user.RefreshToken = &refreshToken
 	if err := database.DB.Save(&user).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save refresh token"})
 		return
@@ -274,7 +274,7 @@ func RefreshToken(context *gin.Context) {
 		return
 	}
 
-	user.RefreshToken = newRefreshToken
+	user.RefreshToken = &newRefreshToken
 	if err := database.DB.Save(&user).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save refresh token"})
 		return
@@ -296,7 +296,7 @@ func Logout(context *gin.Context) {
 		return
 	}
 
-	user.RefreshToken = ""
+	user.RefreshToken = nil
 	if err := database.DB.Save(&user).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not log out"})
 		return
