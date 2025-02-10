@@ -6,24 +6,24 @@ import (
 	"example/APIForWorldWorkHub/models"
 	"example/APIForWorldWorkHub/utils"
 	"fmt"
-	"net/http"
-	"os"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"os"
 )
 
 type UserResponse struct {
-	ID              string     `json:"id"`
-	Firstname       string     `json:"firstname"`
-	Lastname        string     `json:"lastname"`
-	Email           string     `json:"email"`
-	Role            string     `json:"role"`
-	Occupation      string     `json:"occupation"`
-	Phone           string     `json:"phone"`
-	Education       string     `json:"education"`
-	Region          string     `json:"region"`
-	City            string     `json:"city"`
-	ZipCode         string     `json:"zipcode"`
+	ID              string            `json:"id"`
+	Firstname       string            `json:"firstname"`
+	Lastname        string            `json:"lastname"`
+	Email           string            `json:"email"`
+	Role            string            `json:"role"`
+	Occupation      string            `json:"occupation"`
+	Phone           string            `json:"phone"`
+	Education       string            `json:"education"`
+	Region          string            `json:"region"`
+	City            string            `json:"city"`
+	ZipCode         string            `json:"zipcode"`
 	Services        []models.Service  `json:"services"`
 	SpokenLanguages []models.Language `json:"languages"`
 }
@@ -55,8 +55,8 @@ func GetUsers(context *gin.Context) {
 
 	var userResponses []UserResponse
 	for _, user := range users {
-			userResponse := mapUserToResponse(user)
-			userResponses = append(userResponses, userResponse)
+		userResponse := mapUserToResponse(user)
+		userResponses = append(userResponses, userResponse)
 	}
 
 	context.IndentedJSON(http.StatusOK, userResponses)
@@ -119,7 +119,7 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
-	
+
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -147,13 +147,13 @@ func Register(context *gin.Context) {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
-	
+
 	// Recarregar o usuário com os relacionamentos
 	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
-	
+
 	userResponse := mapUserToResponse(newUserModel)
 	context.IndentedJSON(http.StatusCreated, userResponse)
 }
@@ -170,7 +170,7 @@ func GetUserById(id string) (*models.User, error) {
 func GetUser(context *gin.Context) {
 	id := context.Param("id")
 	user, err := GetUserById(id)
-	
+
 	if err != nil {
 		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "User not found"})
 		return
@@ -356,7 +356,7 @@ func UpdateUser(context *gin.Context) {
 			context.JSON(http.StatusConflict, gin.H{"message": "CPF already in use"})
 			return
 		}
-}
+	}
 
 	if input.Role != nil {
 		var role models.Role
@@ -365,7 +365,7 @@ func UpdateUser(context *gin.Context) {
 			return
 		}
 	}
-	
+
 	if input.OccupationName != nil {
 		var occupation models.Occupation
 		if err := database.DB.First(&occupation, "name = ?", *input.OccupationName).Error; err != nil {
@@ -397,7 +397,7 @@ func UpdateUser(context *gin.Context) {
 	if input.City != nil {
 		user.City = *input.City
 	}
-	
+
 	if input.ZipCode != nil {
 		user.ZipCode = *input.ZipCode
 	}
@@ -492,7 +492,7 @@ func CreateUser(context *gin.Context) {
 		context.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": "Role Not Found", "errors": err.Error()})
 		return
 	}
-	
+
 	// Hash the password before saving the user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -520,13 +520,13 @@ func CreateUser(context *gin.Context) {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
-	
+
 	// Recarregar o usuário com os relacionamentos
 	if err := database.DB.Preload("Services").Preload("SpokenLanguages").Preload("Region").Preload("Occupation").Preload("Role").Where("id = ?", newUserModel.ID).First(&newUserModel).Error; err != nil {
 		context.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user data"})
 		return
 	}
-	
+
 	userResponse := mapUserToResponse(newUserModel)
 	context.IndentedJSON(http.StatusCreated, userResponse)
 }

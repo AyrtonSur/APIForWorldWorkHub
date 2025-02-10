@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"regexp"
 	"github.com/go-playground/validator/v10"
 	"log"
+	"regexp"
 )
 
 var Validate *validator.Validate
@@ -11,16 +11,16 @@ var Validate *validator.Validate
 func InitValidator() {
 	Validate = validator.New()
 	if err := Validate.RegisterValidation("zipcode", validateZipCode); err != nil {
-    log.Fatalf("Erro ao registrar validação: %v", err)
+		log.Fatalf("Erro ao registrar validação: %v", err)
 	}
 	if err := Validate.RegisterValidation("password", passwordValidator); err != nil {
-    log.Fatalf("Erro ao registrar validação: %v", err)
+		log.Fatalf("Erro ao registrar validação: %v", err)
 	}
 	if err := Validate.RegisterValidation("phone", validatePhone); err != nil {
-    log.Fatalf("Erro ao registrar validação: %v", err)
+		log.Fatalf("Erro ao registrar validação: %v", err)
 	}
 	if err := Validate.RegisterValidation("cpf", validateCPF); err != nil {
-    log.Fatalf("Erro ao registrar validação: %v", err)
+		log.Fatalf("Erro ao registrar validação: %v", err)
 	}
 }
 
@@ -31,13 +31,13 @@ func validateZipCode(fl validator.FieldLevel) bool {
 	if !regex.MatchString(zipCode) {
 		return false
 	}
-	
+
 	// Verifica se o ZipCode realmente existe
 	exists, err := ValidateZipCode(zipCode)
 	if err != nil || !exists {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -53,26 +53,26 @@ func validatePhone(fl validator.FieldLevel) bool {
 
 func validateCPF(fl validator.FieldLevel) bool {
 	field := fl.Field().Interface()
-	
+
 	var cpf string
-	
+
 	switch v := field.(type) {
-		case *string: // Caso o campo seja um ponteiro para string
-			if v == nil {
-				return true // Válido se for nil (omitempty)
-			}
-			cpf = *v
-		case string: // Caso o campo seja uma string
-			cpf = v
-			default:
-			return false // Tipo inválido
+	case *string: // Caso o campo seja um ponteiro para string
+		if v == nil {
+			return true // Válido se for nil (omitempty)
+		}
+		cpf = *v
+	case string: // Caso o campo seja uma string
+		cpf = v
+	default:
+		return false // Tipo inválido
 	}
-	
+
 	// Considera válido se vazio devido ao omitempty
 	if cpf == "" {
 		return true
 	}
-	
+
 	// Verifica se o CPF tem exatamente 11 dígitos
 	return len(cpf) == 11
 }

@@ -1,10 +1,10 @@
 package middlewares
 
 import (
-    "net/http"
-    "github.com/gin-gonic/gin"
-    "example/APIForWorldWorkHub/models"
-    "example/APIForWorldWorkHub/database"
+	"example/APIForWorldWorkHub/database"
+	"example/APIForWorldWorkHub/models"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func Authorize(permission string) gin.HandlerFunc {

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"log"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 	"example/APIForWorldWorkHub/database"
 	"example/APIForWorldWorkHub/routes"
 	"example/APIForWorldWorkHub/utils"
+	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"log"
+	"os"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 
 	routes.SetupRoutes(router)
 	if err := router.Run("localhost:9090"); err != nil {
-    log.Fatalf("Erro ao iniciar servidor: %v", err)
+		log.Fatalf("Erro ao iniciar servidor: %v", err)
 	}
 	fmt.Println("Server Running in localhost:9090")
 }

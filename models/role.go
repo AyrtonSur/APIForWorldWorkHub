@@ -6,7 +6,7 @@ import (
 )
 
 type Role struct {
-	ID          string         `gorm:"primaryKey"`
+	ID          string       `gorm:"primaryKey"`
 	Name        string       `gorm:"unique;not null"`
 	Permissions []Permission `gorm:"many2many:role_permissions;"`
 }

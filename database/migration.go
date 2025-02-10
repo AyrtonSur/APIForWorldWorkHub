@@ -1,14 +1,14 @@
 package database
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"example/APIForWorldWorkHub/models"
 	"example/APIForWorldWorkHub/seed"
+	"fmt"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"log"
+	"os"
+	"path/filepath"
 )
 
 var DB *gorm.DB
@@ -40,13 +40,13 @@ func InitialMigration() {
 		&models.Role{},
 		&models.Permission{},
 	); err != nil {
-    log.Fatalf("Erro ao rodar migrações: %v", err)
+		log.Fatalf("Erro ao rodar migrações: %v", err)
 	}
 
 	seed.InitializeOccupations(DB)
 	seed.InitializeStates(DB)
 	seed.InitializeRoles(DB)
 	if err := seed.InitializePermissions(DB); err != nil {
-    log.Fatalf("Erro ao inicializar permissões: %v", err)
+		log.Fatalf("Erro ao inicializar permissões: %v", err)
 	}
 }

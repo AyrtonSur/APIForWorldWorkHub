@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"github.com/gin-gonic/gin"
 	"example/APIForWorldWorkHub/utils"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 

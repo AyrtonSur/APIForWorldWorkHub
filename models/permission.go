@@ -6,7 +6,7 @@ import (
 )
 
 type Permission struct {
-	ID   string   `gorm:"primaryKey"`
+	ID   string `gorm:"primaryKey"`
 	Name string `gorm:"unique;not null"`
 }
 
