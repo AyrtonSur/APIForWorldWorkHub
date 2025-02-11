@@ -29,7 +29,7 @@ func main() {
 
 	// Configurar o middleware CORS
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true, // Altere para os domínios permitidos
+		AllowOrigins:     []string{"http://localhost:5173"}, // Altere para os domínios permitidos
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
