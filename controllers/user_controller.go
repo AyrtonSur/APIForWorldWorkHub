@@ -241,23 +241,20 @@ func Login(context *gin.Context) {
 }
 
 func RefreshToken(context *gin.Context) {
-	var input struct {
-		RefreshToken string `json:"refresh_token" validate:"required"`
-	}
-
-	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	refreshToken, err := context.Cookie("refresh_token")
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "No refresh token provided"})
 		return
 	}
 
-	claims, err := utils.ValidateToken(input.RefreshToken)
+	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid refresh token"})
 		return
 	}
 
 	var user models.User
-	if err := database.DB.Where("id = ? AND refresh_token = ?", claims.ID, input.RefreshToken).First(&user).Error; err != nil {
+	if err := database.DB.Where("id = ? AND refresh_token = ?", claims.ID, refreshToken).First(&user).Error; err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid refresh token"})
 		return
 	}
