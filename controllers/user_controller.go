@@ -570,9 +570,9 @@ func CheckEmailExists(context *gin.Context) {
 
 	var existingUser models.User
 	if err := database.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
-		context.IndentedJSON(http.StatusConflict, gin.H{"message": "Email already in use"})
+		context.IndentedJSON(http.StatusOK, gin.H{"exists": true})
 		return
 	}
 
-	context.IndentedJSON(http.StatusOK, gin.H{"message": "Email does not exists"})
+	context.IndentedJSON(http.StatusOK, gin.H{"exists": false})
 }
