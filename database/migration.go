@@ -49,4 +49,5 @@ func InitialMigration() {
 	if err := seed.InitializePermissions(DB); err != nil {
 		log.Fatalf("Erro ao inicializar permissões: %v", err)
 	}
+	seed.SeedAdmin(DB)
 }
