@@ -9,7 +9,7 @@ import (
 func SetupRoutes(router *gin.Engine) {
 	router.POST("/login", controllers.Login)
 	router.POST("/refresh-token", controllers.RefreshToken)
-
+	router.GET("/email-exists", controllers.CheckEmailExists)
 	router.POST("/users", controllers.Register)
 
 	auth := router.Group("/")

@@ -552,3 +552,27 @@ func GetCurrentUser(context *gin.Context) {
 	userResponse := mapUserToResponse(*user)
 	context.JSON(http.StatusOK, userResponse)
 }
+
+func CheckEmailExists(context *gin.Context) {
+	var input struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+
+	if err := context.BindJSON(&input); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
+		return
+	}
+
+	if err := utils.Validate.Struct(input); err != nil {
+		context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": err.Error()})
+		return
+	}
+
+	var existingUser models.User
+	if err := database.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
+		context.IndentedJSON(http.StatusConflict, gin.H{"message": "Email already in use"})
+		return
+	}
+
+	context.IndentedJSON(http.StatusOK, gin.H{"message": "Email does not exists"})
+}
