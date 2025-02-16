@@ -9,10 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func SeedAdmin(db *gorm.DB) {
+func AdminSeed(db *gorm.DB) {
 	if os.Getenv("GIN_MODE") != "dev" {
-			fmt.Println("Seed admin: ambiente não é de desenvolvimento, seed ignorado.")
-			return
+		fmt.Println("Seed admin: ambiente não é de desenvolvimento, seed ignorado.")
+		return
 	}
 
 	fmt.Println("Executando seed de admin para ambiente de desenvolvimento...")
@@ -46,18 +46,18 @@ func SeedAdmin(db *gorm.DB) {
 		Lastname:       "User",
 		Email:          "admin@example.com",
 		PasswordDigest: string(hashedPassword), // lembre-se de armazenar a senha já hasheada
-		CPF:            nil,               // ou um valor válido se necessário
-		RoleID:         "admin-role-id",   // substitua pelo ID real do role admin, se necessário
-		OccupationID:   &occupation.ID,               // ou um valor válido se necessário
+		CPF:            nil,                    // ou um valor válido se necessário
+		RoleID:         "admin-role-id",        // substitua pelo ID real do role admin, se necessário
+		OccupationID:   &occupation.ID,         // ou um valor válido se necessário
 		Phone:          "0000000000000",
 		ZipCode:        "12345",
 		Education:      "Admin Education",
 		RegionID:       region.ID, // substitua pelo ID real da região, se necessário
 		City:           "Admin City",
-		RefreshToken:   nil,               // ou um valor válido se necessário
-			// Services e SpokenLanguages podem ser preenchidos conforme necessário
+		RefreshToken:   nil, // ou um valor válido se necessário
+		// Services e SpokenLanguages podem ser preenchidos conforme necessário
 	}
-		
+
 	if err := db.FirstOrCreate(&admin, admin).Error; err != nil {
 		fmt.Printf("Erro ao criar admin: %v\n", err)
 		return
