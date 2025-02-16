@@ -11,6 +11,7 @@ func SetupRoutes(router *gin.Engine) {
 	router.POST("/refresh-token", controllers.RefreshToken)
 	router.POST("/email-exists", controllers.CheckEmailExists)
 	router.POST("/users", controllers.Register)
+	router.POST("/zip-exists", controllers.CheckZip)
 
 	auth := router.Group("/")
 	auth.Use(middlewares.Authenticate())
